@@ -1,0 +1,39 @@
+﻿@model IEnumerable<FirstMVC.Models.Project>
+<!DOCTYPE html>
+<html>
+<head>
+	
+</head>
+<body>
+
+	<h2>HTML Table</h2>
+	<p>
+		@Html.ActionLink("Yeni Proje", "Create", null, new { @class = "btn btn-primary" })
+	</p>
+	<table class="table table-hover table-striped" >
+		<thead>
+			<tr>
+				<th><b>@Html.DisplayNameFor(model=>model.Photo)</b></th>
+				<th><b>@Html.DisplayNameFor(model => model.Title)</b></th>
+				<th><b>@Html.DisplayNameFor(model => model.Description)</b></th>
+				<th><b>@Html.DisplayNameFor(model => model.Category.Name)</b></th>
+				<th><b>Eylemler</b></th>
+			</tr>
+			</thead>
+		<tbody>
+			@foreach (var item in Model)
+			{
+				<tr>
+					<td><img src="/images/@item.Photo" height="50" width="50" /></td>
+					<td>@Html.DisplayFor(modelItem=>item.Title)</td>
+					<td>@Html.DisplayFor(modelItem=>item.Description)</td>
+					<td>@Html.DisplayFor(modelItem=>item.Category.Name)</td>
+					<td><a href="@Url.Action("Edit",new { id = item.Id })" class="btn btn-warning btn-sm">Düzenle</a><a href="@Url.Action("Delete",new { id = item.Id })" class="btn btn-danger btn-sm"	onclick="return confirm('Bu kaydı silmek istediğine emin misin ?');" >Sil</a></td>
+									
+
+				</tr> 
+			}
+		</tbody>
+	</table>
+</body>
+</html>

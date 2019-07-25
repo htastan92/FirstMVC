@@ -1,0 +1,19 @@
+#demo{background-color: #333333}
+.social-media a:link{font-size: 18px;padding: 5px;}
+.social-media a:hover{color: white}
+footer a:link, footer a:visited {color: white}
+table {
+	font-family: arial, sans-serif;
+	border-collapse: collapse;
+	width: 100%;
+}
+
+td, th {
+	border: 1px solid #dddddd;
+	text-align: left;
+	padding: 8px;
+}
+
+tr:nth-child(even) {
+	background-color: #dddddd;
+}
