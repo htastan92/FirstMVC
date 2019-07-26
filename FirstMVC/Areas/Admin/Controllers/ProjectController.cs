@@ -2,6 +2,7 @@
 using FirstMVC.Models;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Web;
 using System.Web.Mvc;
@@ -38,18 +39,31 @@ namespace FirstMVC.Areas.Admin.Controllers
 			using (var db = new ApplicationDbContext())
 			{
 				ViewBag.Categories = new SelectList(db.Categories.ToList(), "Id", "Name");
-				
+
 			}
 			return View(project);
 		}
 		[HttpPost]
 		[ValidateInput(false)]
-		public ActionResult Create(Project project)
+		public ActionResult Create(Project project, HttpPostedFileBase upload)
 		{
 			if (ModelState.IsValid)
 			{
+
 				using (var db = new ApplicationDbContext())
 				{
+					try
+					{
+						project.Photo = UploadFile(upload);
+					}
+					catch (Exception ex)
+					{
+
+						ViewBag.Error = ex.Message;
+						ViewBag.Categories = new SelectList(db.Categories.ToList(), "Id", "Name");
+						return View(project);
+					}
+
 					db.Projects.Add(project);
 					db.SaveChanges();
 					return RedirectToAction("Index");
@@ -64,6 +78,44 @@ namespace FirstMVC.Areas.Admin.Controllers
 			return View(project);
 		}
 
+		public string UploadFile(HttpPostedFileBase upload)
+		{
+			if (upload != null && upload.ContentLength > 0)
+			{
+				var extension = Path.GetExtension(upload.FileName).ToLower();
+				if (extension == ".jpg" || extension == ".jpeg" || extension == ".gif" || extension == ".png")
+				{
+					if (Directory.Exists(Server.MapPath("~/Uploads")))
+					{
+						string fileName = upload.FileName.ToLower();
+						fileName = fileName.Replace("İ", "i");
+						fileName = fileName.Replace("Ş", "s");
+						fileName = fileName.Replace("ı", "i");
+						fileName = fileName.Replace("(", "");
+						fileName = fileName.Replace("Ğ", "G");
+						fileName = fileName.Replace("ğ", "g");
+						fileName = fileName.Replace(" ", "-");
+						fileName = fileName.Replace(",", "");
+						fileName = fileName.Replace("ö", "o");
+						fileName = fileName.Replace("ü", "u");
+						fileName = fileName.Replace("`", "");
+
+						fileName = DateTime.Now.Ticks.ToString() + fileName;
+						upload.SaveAs(Path.Combine(Server.MapPath("~/Uploads"), fileName));
+						return fileName;
+					}
+					else
+					{
+						throw new Exception("Uploads dizini mevcut değil");
+					}
+				}
+				else
+				{
+					throw new Exception("Dosya türü .jpg , .jpeg , .gif ya da .png olmalıdır ");
+				}
+			}
+			return null;
+		}
 		public ActionResult Edit(int id)
 		{
 			using (var db = new ApplicationDbContext())
@@ -71,6 +123,7 @@ namespace FirstMVC.Areas.Admin.Controllers
 				var project = db.Projects.Where(x => x.Id == id).FirstOrDefault();
 				if (project != null)
 				{
+					ViewBag.Categories = new SelectList(db.Categories.ToList(), "Id", "Name");
 					return View(project);
 				}
 				else
@@ -81,18 +134,38 @@ namespace FirstMVC.Areas.Admin.Controllers
 		}
 		[HttpPost]
 		[ValidateInput(false)]
-		public ActionResult Edit(Project project)
+		public ActionResult Edit(Project project, HttpPostedFileBase upload, string sil)
 		{
 			if (ModelState.IsValid)
 			{
 				using (var db = new ApplicationDbContext())
 				{
+					try
+					{
+						project.Photo = UploadFile(upload);
+					}
+					catch (Exception ex)
+					{
+
+						ViewBag.Error = ex.Message;
+						ViewBag.Categories = new SelectList(db.Categories.ToList(), "Id", "Name");
+						return View(project);
+					}
+
 					var dbproject = db.Projects.Where(p => p.Id == project.Id).FirstOrDefault();
 					dbproject.Title = project.Title;
 					dbproject.Description = project.Description;
-					dbproject.Category.Name = project.Category.Name;
+					dbproject.CategoryId = project.CategoryId;
 					dbproject.Body = project.Body;
-					dbproject.Photo = project.Photo;
+					if (!string.IsNullOrEmpty(project.Photo))
+					{
+						dbproject.Photo = project.Photo;
+						
+					}
+					if (!string.IsNullOrEmpty(sil))
+					{
+						dbproject.Photo = null;
+					}
 					db.SaveChanges();
 				}
 
@@ -102,7 +175,7 @@ namespace FirstMVC.Areas.Admin.Controllers
 				ViewBag.Categories = new SelectList(db.Categories.ToList(), "Id", "Name");
 
 			}
-			return View(project);
+			return RedirectToAction("Index");
 		}
 
 		public ActionResult Delete(int id)
